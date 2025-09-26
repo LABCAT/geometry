@@ -1,8 +1,11 @@
 import { Midi } from '@tonejs/midi';
 import ColorGenerator from './lib/p5.colorGenerator.js';
+import './lib/p5.polar.js';
+import './lib/p5.sacredGeometry.js';
+import OpenFormUI from './OpenFormUI.js';
 
-const audio = './audio/gemometry-no-1.ogg';
-const midi = './audio/gemometry-no-1.mid';
+const audio = './audio/geometry-no-1.ogg';
+const midi = './audio/geometry-no-1.mid';
 
 const GeometryNo1 = (p) => {
     /** 
@@ -14,6 +17,22 @@ const GeometryNo1 = (p) => {
     p.audioLoaded = false;
     p.songHasFinished = false;
     p.showingStatic = true;
+
+    /** 
+     * Animation and color properties
+     */
+    p.animationStartTime = 0;
+    p.animationDuration = 2000; // 2 seconds
+    p.animationProgress = 0;
+    p.lastRegenTime = 0;
+    p.autoRegenInterval = 5000; // 5 seconds
+    p.baseHue = 0;
+    p.complementaryHue = 0;
+
+    /** 
+     * Open-form UI component
+     */
+    p.openFormUI = null;
 
     /** 
      * Preload function - Loading audio and setting up MIDI
@@ -44,14 +63,51 @@ const GeometryNo1 = (p) => {
         p.createCanvas(p.windowWidth, p.windowHeight);
         p.canvas.classList.add('p5Canvas--cursor-play');
         p.background(0, 0, 0);
-        p.rectMode(p.CENTER);
         p.colorMode(p.HSB);
-        p.currentColorScheme = p.generateColourScheme(p.random(p.colourModes));
-        p.mainDonuts = [];  
-        p.subDonuts = [];  
         
-        // Generate all six loops with unique patterns and main donut data
-        p.loops = p.generateLoopData();
+        // Initialize random color values
+        p.initializeRandomValues();
+        
+        // Initialize open-form UI
+        p.openFormUI = new OpenFormUI();
+        p.openFormUI.setOnLineageChange((lineage, changedLevel) => {
+            console.log('=== LINEAGE CHANGED ===');
+            console.log("lineage:", $fx.lineage);
+            console.log("depth:", $fx.depth);
+            
+            // Example of using fxhash API like in the documentation
+            const options = {
+                color: ["red", "green", "blue"],
+                size: ["small", "medium", "big"],
+            };
+            
+            // Use depth 0 to define the first features
+            const features = {
+                color: options.color[Math.floor($fx.randAt(0) * options.color.length)],
+                size: options.size[Math.floor($fx.randAt(0) * options.size.length)],
+                complexity: 0,
+            };
+            
+            // Iterate through each depth to mutate some features
+            for (let i = 0; i <= $fx.depth; i++) {
+                // Randomly mutate color or size
+                if ($fx.randAt(i) < 0.5) {
+                    features.color = options.color[Math.floor($fx.randAt(i) * options.color.length)];
+                } else {
+                    features.size = options.size[Math.floor($fx.randAt(i) * options.size.length)];
+                }
+                // Mutate complexity number
+                features.complexity += $fx.randAt(i) * 0.1;
+                
+                console.log(`Features at depth ${i}:`, { ...features });
+            }
+            
+            // Update visual based on evolved features
+            p.initializeRandomValues();
+        });
+        
+        document.getElementById("loader").classList.add("loading--complete");
+        document.getElementById('play-icon').classList.add('fade-in');
     };
 
     /** 
@@ -59,13 +115,37 @@ const GeometryNo1 = (p) => {
      * This runs continuously after setup
      */
     p.draw = () => {
-        if (p.showingStatic) {
-            p.background(0, 0, 0);
-            p.noLoop(); 
-        } else if(p.audioLoaded && p.song.isPlaying() || p.songHasFinished){
-            p.background(0, 0, 0);
+        p.clear();
+        
+        // Update animation progress
+        const elapsed = p.millis() - p.animationStartTime;
+        p.animationProgress = p.constrain(elapsed / p.animationDuration, 0, 1);
+        
+        // Auto-regenerate every 5 seconds
+        if (p.millis() - p.lastRegenTime > p.autoRegenInterval) {
+            p.initializeRandomValues();
         }
-    }
+        
+        const cellWidth = p.width / 2;
+        const cellHeight = p.height / 2;
+        const cellAspectRatio = cellWidth / cellHeight;
+        
+        if (cellAspectRatio > 1.5 && window.innerHeight < 500) {
+            // Single row layout when aspect ratio > 3:2
+            const singleCellWidth = p.width / 4;
+            const singleCellHeight = p.height;
+            p.drawCell(p.color(p.complementaryHue, 20, 100), p.complementaryHue, 0, 0, singleCellWidth, singleCellHeight, true, 0);
+            p.drawCell(p.color(p.complementaryHue, 100, 20), p.complementaryHue, singleCellWidth, 0, singleCellWidth, singleCellHeight, false, 1);
+            p.drawCell(p.color(p.baseHue, 20, 100), p.baseHue, singleCellWidth * 2, 0, singleCellWidth, singleCellHeight, true, 2);
+            p.drawCell(p.color(p.baseHue, 100, 20), p.baseHue, singleCellWidth * 3, 0, singleCellWidth, singleCellHeight, false, 3);
+        } else {
+            // 2x2 grid layout
+            p.drawCell(p.color(p.complementaryHue, 100, 20), p.complementaryHue, 0, 0, cellWidth, cellHeight, true, 0);
+            p.drawCell(p.color(p.baseHue, 20, 100), p.baseHue, cellWidth, 0, cellWidth, cellHeight, false, 1);
+            p.drawCell(p.color(p.complementaryHue, 20, 100), p.complementaryHue, 0, cellHeight, cellWidth, cellHeight, false, 2);
+            p.drawCell(p.color(p.baseHue, 100, 20), p.baseHue, cellWidth, cellHeight, cellWidth, cellHeight, true, 3);
+        }
+    };
 
     /** 
      * MIDI loading and processing
@@ -179,6 +259,17 @@ const GeometryNo1 = (p) => {
      */
     p.isPortraitCanvas = () => {
         return p.height > p.width;
+    };
+
+    /**
+     * Initialize random values for colors and animation
+     */
+    p.initializeRandomValues = () => {
+        p.baseHue = p.random(360);
+        p.complementaryHue = (p.baseHue + 180) % 360;
+        p.animationStartTime = p.millis();
+        p.lastRegenTime = p.millis();
+        p.animationProgress = 0;
     };
 };
 
