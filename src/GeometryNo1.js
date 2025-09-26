@@ -2,7 +2,7 @@ import { Midi } from '@tonejs/midi';
 import ColorGenerator from './lib/p5.colorGenerator.js';
 import './lib/p5.polar.js';
 import './lib/p5.sacredGeometry.js';
-import OpenFormUI from './OpenFormUI.js';
+import OpenFormUI from './classes/OpenFormUI.js';
 
 const audio = './audio/geometry-no-1.ogg';
 const midi = './audio/geometry-no-1.mid';
@@ -29,10 +29,6 @@ const GeometryNo1 = (p) => {
     p.baseHue = 0;
     p.complementaryHue = 0;
 
-    /** 
-     * Open-form UI component
-     */
-    p.openFormUI = null;
 
     /** 
      * Preload function - Loading audio and setting up MIDI
@@ -58,7 +54,7 @@ const GeometryNo1 = (p) => {
      */
     p.setup = () => {
         const seed = p.hashToSeed(hl.tx.hash + hl.tx.tokenId);
-        console.log(`Hash: ${hl.tx.hash}, TokenID: ${hl.tx.tokenId}, Seed: ${seed}`);
+        // console.log(`Hash: ${hl.tx.hash}, TokenID: ${hl.tx.tokenId}, Seed: ${seed}`);
         p.randomSeed(seed);
         p.createCanvas(p.windowWidth, p.windowHeight);
         p.canvas.classList.add('p5Canvas--cursor-play');
@@ -70,41 +66,6 @@ const GeometryNo1 = (p) => {
         
         // Initialize open-form UI
         p.openFormUI = new OpenFormUI();
-        p.openFormUI.setOnLineageChange((lineage, changedLevel) => {
-            console.log('=== LINEAGE CHANGED ===');
-            console.log("lineage:", $fx.lineage);
-            console.log("depth:", $fx.depth);
-            
-            // Example of using fxhash API like in the documentation
-            const options = {
-                color: ["red", "green", "blue"],
-                size: ["small", "medium", "big"],
-            };
-            
-            // Use depth 0 to define the first features
-            const features = {
-                color: options.color[Math.floor($fx.randAt(0) * options.color.length)],
-                size: options.size[Math.floor($fx.randAt(0) * options.size.length)],
-                complexity: 0,
-            };
-            
-            // Iterate through each depth to mutate some features
-            for (let i = 0; i <= $fx.depth; i++) {
-                // Randomly mutate color or size
-                if ($fx.randAt(i) < 0.5) {
-                    features.color = options.color[Math.floor($fx.randAt(i) * options.color.length)];
-                } else {
-                    features.size = options.size[Math.floor($fx.randAt(i) * options.size.length)];
-                }
-                // Mutate complexity number
-                features.complexity += $fx.randAt(i) * 0.1;
-                
-                console.log(`Features at depth ${i}:`, { ...features });
-            }
-            
-            // Update visual based on evolved features
-            p.initializeRandomValues();
-        });
         
         document.getElementById("loader").classList.add("loading--complete");
         document.getElementById('play-icon').classList.add('fade-in');
@@ -156,7 +117,7 @@ const GeometryNo1 = (p) => {
             /** 
              * Log when MIDI is loaded
              */
-            console.log('MIDI loaded:', result);
+            // console.log('MIDI loaded:', result);
             /** 
              * Example: Schedule different tracks for different visual elements
              */

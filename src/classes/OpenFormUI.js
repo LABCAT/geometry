@@ -7,7 +7,6 @@ export default class OpenFormUI {
     this.lineage = [];
     this.buttons = [];
     this.container = null;
-    this.onLineageChange = null; // Callback for when lineage updates
     
     this.init();
   }
@@ -71,6 +70,9 @@ export default class OpenFormUI {
    * Handle button click - generate hash and reset subsequent buttons
    */
   handleButtonClick(index) {
+    // Truncate lineage to only include generations before this level
+    this.lineage = this.lineage.slice(0, index);
+    
     // Generate new hash for this level
     this.generateHash(index);
     
@@ -81,11 +83,6 @@ export default class OpenFormUI {
     
     // Update button states
     this.updateButtonStates();
-    
-    // Trigger callback if set
-    if (this.onLineageChange) {
-      this.onLineageChange(this.lineage, index);
-    }
   }
 
   /**
@@ -93,22 +90,15 @@ export default class OpenFormUI {
    * Simulates platform generating new hash for each evolution
    */
   generateHash(level) {
-    console.log('Generating hash for level:', level);
-    
     if (level === 0) {
       // ROOT: Reset everything, generate completely new lineage
-      console.log('Resetting to new root');
       this.lineage = [];
       
       // Navigate to new URL with new fxhash (let library generate)
       this.navigateToNewToken([]);
     } else {
       // CHILD/GRANDCHILD/etc: Add new generation to existing lineage
-      console.log('Adding generation to existing lineage');
-      // Button clicks should evolve from current lineage
-      // All buttons except 1 should add to the existing lineage
       const parentLineage = [...this.lineage];
-      console.log(`Button ${level + 1} clicked, evolving from current lineage:`, parentLineage);
       
       // Navigate to new URL representing evolved token
       this.navigateToNewToken(parentLineage);
@@ -151,14 +141,7 @@ export default class OpenFormUI {
     // Update button display with new hash
     this.updateButtonDisplay(this.lineage.length - 1, newHash);
     
-    // Log updated $fx state
-    console.log('After manual update, $fx state:', {
-      hash: window.$fx.hash,
-      lineage: window.$fx.lineage,
-      depth: window.$fx.depth
-    });
-    
-    console.log('Generated new hash:', newHash, 'Updated lineage:', this.lineage);
+    console.log('Updated lineage:', this.lineage);
   }
 
   /**
@@ -175,16 +158,11 @@ export default class OpenFormUI {
       // The lineage array contains ALL generations INCLUDING current
       // lineage[0] = 1st gen, lineage[1] = 2nd gen, etc.
       this.lineage = [...window.$fx.lineage];
-      console.log('Initialized from existing lineage:', this.lineage);
-      console.log('Current hash:', window.$fx.hash);
-      console.log('Depth:', window.$fx.depth);
+      console.log('Initialized lineage:', this.lineage);
       
       // Display each generation on its corresponding button
-      // Reverse the lineage array to match button order
-      const reversedLineage = [...this.lineage].reverse();
-      for (let i = 0; i < reversedLineage.length; i++) {
-        this.updateButtonDisplay(i, reversedLineage[i]);
-        console.log(`Button ${i + 1} (generation ${i + 1}): ${reversedLineage[i]}`);
+      for (let i = 0; i < this.lineage.length; i++) {
+        this.updateButtonDisplay(i, this.lineage[i]);
       }
       
     } else {
@@ -207,29 +185,6 @@ export default class OpenFormUI {
     return `oo${Array.from({length:49}, () => p[Math.random() * p.length | 0]).join("")}`;
   }
 
-  /**
-   * Update URL parameters to match fxhash format
-   * @param {string} mainHash - The current token's hash
-   * @param {array} lineage - Array of parent hashes
-   */
-  updateURLParams(mainHash, lineage) {
-    const url = new URL(window.location);
-    
-    // Set main hash parameter
-    url.searchParams.set('fxhash', mainHash);
-    
-    // Set lineage in hash fragment if there are parents
-    if (lineage.length > 0) {
-      url.hash = `lineage=${lineage.join(',')}`;
-    } else {
-      url.hash = '';
-    }
-    
-    // Update URL without page refresh
-    window.history.pushState({}, '', url);
-    
-    console.log('Updated URL:', url.toString());
-  }
 
   /**
    * Update the fxhash library's internal state
@@ -316,35 +271,5 @@ export default class OpenFormUI {
     button.style.cursor = 'not-allowed';
     button.style.opacity = '0.6';
     button.style.border = '1px solid #333';
-  }
-
-  /**
-   * Get current lineage
-   */
-  getLineage() {
-    return [...this.lineage];
-  }
-
-  /**
-   * Get current depth (number of parents)
-   */
-  getDepth() {
-    return Math.max(0, this.lineage.length - 1);
-  }
-
-  /**
-   * Set callback for lineage changes
-   */
-  setOnLineageChange(callback) {
-    this.onLineageChange = callback;
-  }
-
-  /**
-   * Cleanup - remove from DOM
-   */
-  destroy() {
-    if (this.container && this.container.parentNode) {
-      this.container.parentNode.removeChild(this.container);
-    }
   }
 }
