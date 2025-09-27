@@ -55,11 +55,11 @@ const GeometryNo1 = (p) => {
         act3: [],
         act4: [],
     }
+    p.currentSceneIndex = 0;
+    p.sceneChangeInterval = null;
     p.animationStartTime = 0;
-    p.animationDuration = 2000; 
-    p.animationProgress = 0;
-    p.lastRegenTime = 0;
-    p.autoRegenInterval = 5000; 
+    p.animationDuration = 1000;
+    p.animationProgress = 0; 
 
     /** 
      * Preload function - Loading audio and setting up MIDI
@@ -86,17 +86,117 @@ const GeometryNo1 = (p) => {
     p.setup = () => {
         p.createCanvas(p.windowWidth, p.windowHeight);
         p.canvas.classList.add('p5Canvas--cursor-play');
+        p.setStrokeWeight();
         p.background(0, 0, 0);
         p.colorMode(p.HSB);
-        
-        // Initialize random color values
-        p.initializeRandomValues();
-        
         // Initialize open-form UI
         p.openFormUI = new OpenFormUI();
+        // Initialize random color values
+        p.initializeRandomValues();
+
+        console.log(p.acts.act1[0]);
         
         document.getElementById("loader").classList.add("loading--complete");
         document.getElementById('play-icon').classList.add('fade-in');
+        p.startSceneChanging();
+    };
+
+    /** 
+     * Draw Act 1 Scene - Contains the main drawing logic for Act 1
+     */
+    p.drawAct1Scene = () => {
+        const scene = p.acts.act1[p.currentSceneIndex];
+        const cellWidth = p.width / 2;
+        const cellHeight = p.height / 2;
+        const cellAspectRatio = cellWidth / cellHeight;
+        
+        if (cellAspectRatio > 1.5 && window.innerHeight < 500) {
+            // Single row layout when aspect ratio > 3:2
+            const singleCellWidth = p.width / 4;
+            const singleCellHeight = p.height;
+            p.drawCell(
+                p.color(scene.complementaryHue, 20, 100),
+                p.color(scene.baseHue, 100, 100),
+                0,
+                0,
+                singleCellWidth,
+                singleCellHeight,
+                scene.pattern1.pattern,
+                scene.pattern1.shape
+            );
+            p.drawCell(
+                p.color(scene.complementaryHue, 100, 20),
+                p.color(scene.baseHue, 100, 100),
+                singleCellWidth,
+                0,
+                singleCellWidth,
+                singleCellHeight,
+                scene.pattern2.pattern,
+                scene.pattern2.shape
+            );
+            p.drawCell(
+                p.color(scene.baseHue, 20, 100),
+                p.color(scene.complementaryHue, 100, 100),
+                singleCellWidth * 2,
+                0,
+                singleCellWidth,
+                singleCellHeight,
+                scene.pattern1.pattern,
+                scene.pattern1.shape
+            );
+            p.drawCell(
+                p.color(scene.baseHue, 100, 20),
+                p.color(scene.complementaryHue, 100, 100),
+                singleCellWidth * 3,
+                0,
+                singleCellWidth,
+                singleCellHeight,
+                scene.pattern2.pattern,
+                scene.pattern2.shape
+            );
+        } else {
+            // 2x2 grid layout
+            p.drawCell(
+                p.color(scene.complementaryHue, 100, 100),
+                p.color(scene.baseHue, 100, 100),
+                0,
+                0,
+                cellWidth,
+                cellHeight,
+                scene.pattern1.pattern,
+                scene.pattern1.shape
+            );
+            p.drawCell(
+                scene.pattern2.bgColour,
+                p.color(scene.complementaryHue, 100, 100),
+                cellWidth,
+                0,
+                cellWidth,
+                cellHeight,
+                scene.pattern2.pattern,
+                scene.pattern2.shape
+            );
+            p.drawCell(
+                scene.pattern2.bgColour,
+                p.color(scene.baseHue, 100, 100),
+                0,
+                cellHeight,
+                cellWidth,
+                cellHeight,
+                scene.pattern2.pattern,
+                scene.pattern2.shape
+            );
+            p.drawCell(
+                p.color(scene.baseHue, 100, 100),
+                p.color(scene.complementaryHue, 100, 100),
+                cellWidth,
+                cellHeight,
+                cellWidth,
+                cellHeight,
+                scene.pattern1.pattern,
+                scene.pattern1.shape
+            );          
+        }
     };
 
     /** 
@@ -108,27 +208,9 @@ const GeometryNo1 = (p) => {
         
         // Update animation progress
         const elapsed = p.millis() - p.animationStartTime;
-        p.animationProgress = p.constrain(elapsed / p.animationDuration, 0, 1);
+        p.animationProgress = p.min(elapsed / p.animationDuration, 1);
         
-        const cellWidth = p.width / 2;
-        const cellHeight = p.height / 2;
-        const cellAspectRatio = cellWidth / cellHeight;
-        
-        if (cellAspectRatio > 1.5 && window.innerHeight < 500) {
-            // Single row layout when aspect ratio > 3:2
-            const singleCellWidth = p.width / 4;
-            const singleCellHeight = p.height;
-            p.drawCell(p.color(p.complementaryHue, 20, 100), p.complementaryHue, 0, 0, singleCellWidth, singleCellHeight, true, 0);
-            p.drawCell(p.color(p.complementaryHue, 100, 20), p.complementaryHue, singleCellWidth, 0, singleCellWidth, singleCellHeight, false, 1);
-            p.drawCell(p.color(p.baseHue, 20, 100), p.baseHue, singleCellWidth * 2, 0, singleCellWidth, singleCellHeight, true, 2);
-            p.drawCell(p.color(p.baseHue, 100, 20), p.baseHue, singleCellWidth * 3, 0, singleCellWidth, singleCellHeight, false, 3);
-        } else {
-            // 2x2 grid layout
-            p.drawCell(p.color(p.complementaryHue, 100, 20), p.complementaryHue, 0, 0, cellWidth, cellHeight, true, 0);
-            p.drawCell(p.color(p.baseHue, 20, 100), p.baseHue, cellWidth, 0, cellWidth, cellHeight, false, 1);
-            p.drawCell(p.color(p.complementaryHue, 20, 100), p.complementaryHue, 0, cellHeight, cellWidth, cellHeight, false, 2);
-            p.drawCell(p.color(p.baseHue, 100, 20), p.baseHue, cellWidth, cellHeight, cellWidth, cellHeight, true, 3);
-        }
+        p.drawAct1Scene();
     };
 
     /** 
@@ -185,13 +267,39 @@ const GeometryNo1 = (p) => {
     p.executeTrack1 = (note) => {
         const { currentCue, durationTicks } = note;
         const duration = (durationTicks / p.PPQ) * (60 / p.bpm);
-
+        
+        // Cycle to next scene
+        p.currentSceneIndex = (p.currentSceneIndex + 1) % p.acts.act1.length;
+        
+        // Reset animation for new scene
+        p.animationStartTime = p.millis();
+        p.animationProgress = 0;
     }
 
     p.executeTrack2 = (note) => {
         const { currentCue, durationTicks } = note;
         const duration = (durationTicks / p.PPQ) * (60 / p.bpm);
     }
+
+    /**
+     * Start the scene changing interval
+     */
+    p.startSceneChanging = () => {
+        p.stopSceneChanging(); // Clear any existing interval
+        p.sceneChangeInterval = setInterval(() => {
+            p.executeTrack1({});
+        }, 1500);
+    };
+
+    /**
+     * Stop the scene changing interval
+     */
+    p.stopSceneChanging = () => {
+        if (p.sceneChangeInterval) {
+            clearInterval(p.sceneChangeInterval);
+            p.sceneChangeInterval = null;
+        }
+    };
 
     /** 
      * Handle mouse/touch interaction
@@ -222,13 +330,30 @@ const GeometryNo1 = (p) => {
             }
         }
     }
-    
+
+    /**
+     * Resizes the canvas when the window is resized and redraws
+     */
+    p.windowResized = () => {
+        p.resizeCanvas(p.windowWidth, p.windowHeight);
+        p.setStrokeWeight();
+        p.redraw();
+    };
+
     /**
      * Utility: Check if the canvas is in portrait orientation
      * @returns {Boolean} true if portrait, false otherwise
      */
     p.isPortraitCanvas = () => {
         return p.height > p.width;
+    };
+
+    /**
+     * Sets the global stroke weight based on the smaller dimension of the canvas
+     */
+    p.setStrokeWeight = () => {
+        const weight = p.min(p.width, p.height) * 0.01;
+        p.strokeWeight(weight);
     };
 
     p.initializeRandomValues = () => {
@@ -259,6 +384,7 @@ const GeometryNo1 = (p) => {
             p.acts.act1.push(
                 {
                     baseHue: p.colourSet[i],
+                    complementaryHue: (p.colourSet[i] + 180) % 360,
                     pattern1: {
                         pattern: p.random(p.selectedPatterns),
                         shape: p.random(p.selectedShapes),
@@ -273,9 +399,11 @@ const GeometryNo1 = (p) => {
         }
 
         for(let i = 0; i < 6; i++){
+            const selectedBaseHue = p.random(p.colourSet);
             p.acts.act1.push(
                 {
-                    baseHue: p.random(p.colourSet),
+                    baseHue: selectedBaseHue,
+                    complementaryHue: (selectedBaseHue + 180) % 360,
                     pattern1: {
                         pattern: p.random(p.selectedPatterns),
                         shape: p.random(p.selectedShapes),

@@ -12,13 +12,15 @@
 /**
  * Draws a single cell with background color and sacred geometry pattern
  * @param {p5.Color} bgColor - Background color object
- * @param {number} strokeHue - Stroke hue value
+ * @param {p5.Color} patternColour - Pattern color object
  * @param {number} x - X position of the cell
  * @param {number} y - Y position of the cell
  * @param {number} w - Width of the cell
  * @param {number} h - Height of the cell
+ * @param {string} pattern - Pattern function name
+ * @param {string} shape - Shape type
  */
-p5.prototype.drawCell = function(bgColor, strokeHue, x, y, w, h, pattern, shape) {
+p5.prototype.drawCell = function(bgColor, patternColour, x, y, w, h, pattern, shape) {
   const maxSize = this.min(w, h) * 0.35;
   const size = maxSize * (this.animationProgress || 1);
   
@@ -30,11 +32,10 @@ p5.prototype.drawCell = function(bgColor, strokeHue, x, y, w, h, pattern, shape)
   this.rect(0, 0, w, h);
   
   this.setCenter(w / 2, h / 2);
-  this.stroke(strokeHue, 100, 100);
-  this.fill(strokeHue, 100, 50);
+  this.stroke(patternColour);
+  this.noFill();
   
-  this.polarEllipse(0, size, size);
-  // this[pattern](shape, size);
+  this[pattern](shape, size);
   
   this.pop();
 };
