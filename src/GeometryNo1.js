@@ -18,17 +18,48 @@ const GeometryNo1 = (p) => {
     p.songHasFinished = false;
     p.showingStatic = true;
 
+    /**
+     * Array of available polar shape types
+     * @type {string[]}
+     */
+    p.shapeTypes = [
+        'polarEllipse',
+        'polarTriangle',
+        'polarSquare',
+        'polarPentagon',
+        'polarHexagon',
+        'polarHeptagon',
+        'polarOctagon'
+    ];
+
+    /**
+     * Array of available pattern drawing functions
+     * @type {string[]}
+     */
+    p.patternFunctions = [
+        'drawVesicaPiscis',
+        'drawSeedOfLife',
+        'drawEggOfLife',
+        'drawFlowerOfLife',
+        'drawFruitOfLife',
+        'drawMetatronsCube',
+        'drawTreeOfLife'
+    ];
+
     /** 
      * Animation and color properties
      */
+    p.acts = {
+        act1: [],
+        act2: [],
+        act3: [],
+        act4: [],
+    }
     p.animationStartTime = 0;
-    p.animationDuration = 2000; // 2 seconds
+    p.animationDuration = 2000; 
     p.animationProgress = 0;
     p.lastRegenTime = 0;
-    p.autoRegenInterval = 5000; // 5 seconds
-    p.baseHue = 0;
-    p.complementaryHue = 0;
-
+    p.autoRegenInterval = 5000; 
 
     /** 
      * Preload function - Loading audio and setting up MIDI
@@ -53,9 +84,6 @@ const GeometryNo1 = (p) => {
      * This runs once after preload
      */
     p.setup = () => {
-        const seed = p.hashToSeed(hl.tx.hash + hl.tx.tokenId);
-        // console.log(`Hash: ${hl.tx.hash}, TokenID: ${hl.tx.tokenId}, Seed: ${seed}`);
-        p.randomSeed(seed);
         p.createCanvas(p.windowWidth, p.windowHeight);
         p.canvas.classList.add('p5Canvas--cursor-play');
         p.background(0, 0, 0);
@@ -81,11 +109,6 @@ const GeometryNo1 = (p) => {
         // Update animation progress
         const elapsed = p.millis() - p.animationStartTime;
         p.animationProgress = p.constrain(elapsed / p.animationDuration, 0, 1);
-        
-        // Auto-regenerate every 5 seconds
-        if (p.millis() - p.lastRegenTime > p.autoRegenInterval) {
-            p.initializeRandomValues();
-        }
         
         const cellWidth = p.width / 2;
         const cellHeight = p.height / 2;
@@ -199,20 +222,6 @@ const GeometryNo1 = (p) => {
             }
         }
     }
-
-     /** 
-     * Convert a string to a deterministic seed for p5.js random functions
-     * Used with highlight.xyz for consistent generative art
-     * @param {String} str - The string to convert to a seed
-     * @returns {Number} - A deterministic seed value
-     */
-    p.hashToSeed = (str) => {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
-        }
-        return Math.abs(hash);
-    };
     
     /**
      * Utility: Check if the canvas is in portrait orientation
@@ -222,15 +231,66 @@ const GeometryNo1 = (p) => {
         return p.height > p.width;
     };
 
-    /**
-     * Initialize random values for colors and animation
-     */
     p.initializeRandomValues = () => {
+        p.randomSeed(window.$fx.lineage[0]);
+        
         p.baseHue = p.random(360);
         p.complementaryHue = (p.baseHue + 180) % 360;
-        p.animationStartTime = p.millis();
-        p.lastRegenTime = p.millis();
-        p.animationProgress = 0;
+        p.baseSplitComp1 = (p.baseHue + 150) % 360;
+        p.baseSplitComp2 = (p.baseHue + 210) % 360;
+        p.compSplitComp1 = (p.complementaryHue + 150) % 360;
+        p.compSplitComp2 = (p.complementaryHue + 210) % 360;
+        
+        p.colourSet = [p.baseHue, p.baseSplitComp1, p.baseSplitComp2, p.complementaryHue, p.compSplitComp1, p.compSplitComp2];
+        
+        const availableShapes = [...p.shapeTypes];
+        p.selectedShapes = ['polarEllipse'];
+        availableShapes.splice(availableShapes.indexOf('polarEllipse'), 1);
+        p.selectedShapes.push(p.random(availableShapes));
+        
+        const availablePatterns = p.patternFunctions.filter(pattern => 
+            pattern !== 'drawMetatronsCube' && pattern !== 'drawTreeOfLife'
+        );
+        p.selectedPatterns = ['drawVesicaPiscis'];
+        availablePatterns.splice(availablePatterns.indexOf('drawVesicaPiscis'), 1);
+        p.selectedPatterns.push(p.random(availablePatterns));
+
+        for(let i = 0; i < 6; i++){
+            p.acts.act1.push(
+                {
+                    baseHue: p.colourSet[i],
+                    pattern1: {
+                        pattern: p.random(p.selectedPatterns),
+                        shape: p.random(p.selectedShapes),
+                    },
+                    pattern2: {
+                        pattern: p.random(p.selectedPatterns),
+                        shape: p.random(p.selectedShapes),
+                        bgColour: p.random([p.color(0, 0, 0), p.color(0, 0, 100)]),
+                    },
+                }
+            ) 
+        }
+
+        for(let i = 0; i < 6; i++){
+            p.acts.act1.push(
+                {
+                    baseHue: p.random(p.colourSet),
+                    pattern1: {
+                        pattern: p.random(p.selectedPatterns),
+                        shape: p.random(p.selectedShapes),
+                    },
+                    pattern2: {
+                        pattern: p.random(p.selectedPatterns),
+                        shape: p.random(p.selectedShapes),
+                        bgColour: p.random([p.color(0, 0, 0), p.color(0, 0, 100)]),
+                    },
+                }
+            ) 
+        }
+
+        p.acts.act1 = p.shuffle(p.acts.act1);
+        console.log(p.acts.act1);
     };
 };
 
