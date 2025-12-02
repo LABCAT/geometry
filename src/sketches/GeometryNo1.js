@@ -51,6 +51,21 @@ const GeometryNo1 = (p) => {
         'drawTreeOfLife'
     ];
 
+    /**
+     * Available blend modes for the sketch
+     * @type {string[]}
+     */
+    p.blendModes = [
+        'ADD',
+        'DARKEST',
+        'LIGHTEST',
+        'EXCLUSION',
+        'MULTIPLY',
+        'SCREEN',
+        'DIFFERENCE',
+        'HARD_LIGHT'
+    ];
+
     /** 
      * Animation and color properties
      */
@@ -163,6 +178,7 @@ const GeometryNo1 = (p) => {
      * Draw Act 2 Scene - Contains the main drawing logic for Act 2
      */
     p.drawAct2Scene = () => {
+        
         const scene = p.acts.act2[p.currentSceneIndex];
         p.act2Scene.draw(scene);
     };
@@ -199,23 +215,21 @@ const GeometryNo1 = (p) => {
         const { currentCue, durationTicks } = note;
         const duration = (durationTicks / p.PPQ) * (60 / p.bpm);
         p.animationDuration = duration * 1000;
+
+        if(currentCue !== 1) {
+            p.currentSceneIndex++;
+        }
         
-        // Get current act's scenes
         const currentActScenes = p.acts[`act${p.currentAct}`];
         
         // Check if next scene would exceed current act's length
-        if (p.currentSceneIndex + 1 >= currentActScenes.length) {
-            // Move to next act in sequence
+        if (p.currentSceneIndex >= currentActScenes.length) {
             p.currentActIndex = (p.currentActIndex + 1) % p.actSequence.length;
             p.currentAct = p.actSequence[p.currentActIndex];
             p.currentSceneIndex = 0;
             console.log(`Switching to Act ${p.currentAct}`);
-        } else {
-            // Move to next scene in current act
-            p.currentSceneIndex++;
-        }
+        } 
         
-        // Reset animation for new scene
         p.animationStartTime = p.song.currentTime() * 1000;
         p.animationProgress = 0;
     }
@@ -295,25 +309,8 @@ const GeometryNo1 = (p) => {
         
         p.colourSet = [p.baseHue, p.baseSplitComp1, p.baseSplitComp2, p.complementaryHue, p.compSplitComp1, p.compSplitComp2];
 
-        for(let i = 0; i < 6; i++){
-            p.acts.act1.push(
-                {
-                    baseHue: p.colourSet[i],
-                    complementaryHue: (p.colourSet[i] + 180) % 360,
-                    pattern1: {
-                        pattern: p.random(p.patternFunctions),
-                        shape: p.random(p.shapeTypes),
-                    },
-                    pattern2: {
-                        pattern: p.random(p.patternFunctions),
-                        shape: p.random(p.shapeTypes),
-                        bgColour: p.random([p.color(0, 0, 0), p.color(0, 0, 100)]),
-                    },
-                }
-            ) 
-        }
-
-        for(let i = 0; i < 6; i++){
+        // Generate Act 1 scenes
+        for(let i = 0; i < 16; i++){
             const selectedBaseHue = p.random(p.colourSet);
             p.acts.act1.push(
                 {
@@ -334,8 +331,8 @@ const GeometryNo1 = (p) => {
 
         p.acts.act1 = p.shuffle(p.acts.act1);
         
-        // Generate Act 2 scenes (12 scenes with 6 cells each)
-        for(let i = 0; i < 12; i++){
+        // Generate Act 2 scenes
+        for(let i = 0; i < 16; i++){
             // Alternate between baseHue and complementaryHue
             const useBaseHue = i % 2 === 0;
             const colorTriad = useBaseHue 
