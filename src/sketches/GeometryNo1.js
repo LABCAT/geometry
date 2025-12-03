@@ -7,6 +7,7 @@ import '@/lib/p5.sacredGeometry.js';
 import AnimatedCell from './classes/geometry-1/AnimatedCell.js';
 import Act1Scene from './classes/geometry-1/Act1Scene.js';
 import Act2Scene from './classes/geometry-1/Act2Scene.js';
+import Act3Scene from './classes/geometry-1/Act3Scene.js';
 
 const base = import.meta.env.BASE_URL || './';
 const audio = `${base}audio/GeometryNo1.ogg`;
@@ -72,7 +73,7 @@ const GeometryNo1 = (p) => {
         act3: [],
         act4: [],
     }
-    p.actSequence = [1, 2, 1, 2]; // Cycle through acts in this order
+    p.actSequence = [1, 2, 3]; // Cycle through acts in this order
     p.currentActIndex = 0; // Index in actSequence
     p.currentAct = 1; // Current act number
     p.currentSceneIndex = 0;
@@ -82,6 +83,7 @@ const GeometryNo1 = (p) => {
     p.animatedCell = null;
     p.act1Scene = null;
     p.act2Scene = null;
+    p.act3Scene = null;
 
     /**
      * MIDI loading and processing
@@ -150,7 +152,9 @@ const GeometryNo1 = (p) => {
         p.background(0, 0, 0);
         p.colorMode(p.HSB);
         const fxHash = p.generateFxHash();
-        p.randomSeed(fxHash);
+        console.log(fxHash);
+
+        // p.randomSeed(fxHash);
 
         // Initialize AnimatedCell instance
         p.animatedCell = new AnimatedCell(p);
@@ -158,6 +162,7 @@ const GeometryNo1 = (p) => {
         // Initialize Act scene renderers
         p.act1Scene = new Act1Scene(p, p.animatedCell);
         p.act2Scene = new Act2Scene(p, p.animatedCell);
+        p.act3Scene = new Act3Scene(p, p.animatedCell);
 
         // Initialize random color values
         p.initializeRandomValues();
@@ -181,6 +186,14 @@ const GeometryNo1 = (p) => {
     };
 
     /**
+     * Draw Act 3 Scene - Contains the main drawing logic for Act 3
+     */
+    p.drawAct3Scene = () => {
+        const scene = p.acts.act3[p.currentSceneIndex];
+        p.act3Scene.draw(scene);
+    };
+
+    /**
      * Main draw loop - This is where your animations happen
      * This runs continuously after setup
      */
@@ -200,6 +213,8 @@ const GeometryNo1 = (p) => {
                 p.drawAct1Scene();
             } else if (p.currentAct === 2) {
                 p.drawAct2Scene();
+            } else if (p.currentAct === 3) {
+                p.drawAct3Scene();
             }
         }
     };
@@ -362,8 +377,28 @@ const GeometryNo1 = (p) => {
             p.acts.act2.push({ cells });
         }
 
+        // Generate Act 3 scenes
+        for(let i = 0; i < 16; i++){
+            const selectedBaseHue = p.random(p.colourSet);
+            const complementaryHue = (selectedBaseHue + 180) % 360;
+
+            // Generate unique pattern and shape sets for this scene
+            const shuffledPatterns = [...p.patternFunctions].sort(() => Math.random() - 0.5);
+            const shuffledShapes = [...p.shapeTypes].sort(() => Math.random() - 0.5);
+
+            p.acts.act3.push({
+                baseHue: selectedBaseHue,
+                complementaryHue: complementaryHue,
+                patterns: shuffledPatterns.slice(0, 4),
+                shapes: shuffledShapes.slice(0, 4)
+            });
+        }
+
+        p.acts.act3 = p.shuffle(p.acts.act3);
+
         console.log('Act 1:', p.acts.act1);
         console.log('Act 2:', p.acts.act2);
+        console.log('Act 3:', p.acts.act3);
     };
 };
 
