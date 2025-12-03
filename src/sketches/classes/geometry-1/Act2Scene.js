@@ -32,13 +32,13 @@ export default class Act2Scene {
   drawLandscapeLayout(scene) {
     const cellWidth = this.p.width / 3;
     const cellHeight = this.p.height / 2;
-    
+
     // Draw 6 cells in 3x2 grid
     for (let i = 0; i < 6; i++) {
       const col = i % 3;
       const row = Math.floor(i / 3);
       const cell = scene.cells[i];
-      
+
       this.animatedCell.draw(
         this.p.color(cell.bgHue, 100, 100),
         this.p.color(cell.fgHue, 100, 100),
@@ -59,13 +59,16 @@ export default class Act2Scene {
   drawPortraitLayout(scene) {
     const cellWidth = this.p.width / 2;
     const cellHeight = this.p.height / 3;
-    
+
     // Draw 6 cells in 2x3 grid
+    // Remap indices so first column matches landscape's top row
     for (let i = 0; i < 6; i++) {
       const col = i % 2;
       const row = Math.floor(i / 2);
-      const cell = scene.cells[i];
-      
+      // Map: col 0 gets cells 0,1,2 (landscape top row), col 1 gets cells 3,4,5 (landscape bottom row)
+      const cellIndex = col * 3 + row;
+      const cell = scene.cells[cellIndex];
+
       this.animatedCell.draw(
         this.p.color(cell.bgHue, 100, 100),
         this.p.color(cell.fgHue, 100, 100),

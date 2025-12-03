@@ -13,7 +13,7 @@ const audio = `${base}audio/GeometryNo1.ogg`;
 const midi = `${base}audio/GeometryNo1.mid`;
 
 const GeometryNo1 = (p) => {
-    /** 
+    /**
      * Core audio properties
      */
     p.song = null;
@@ -56,17 +56,14 @@ const GeometryNo1 = (p) => {
      * @type {string[]}
      */
     p.blendModes = [
-        'ADD',
-        'DARKEST',
-        'LIGHTEST',
-        'EXCLUSION',
-        'MULTIPLY',
-        'SCREEN',
-        'DIFFERENCE',
-        'HARD_LIGHT'
+        p.BLEND,
+        p.EXCLUSION,
+        p.SCREEN,
+        p.DIFFERENCE,
+        p.HARD_LIGHT
     ];
 
-    /** 
+    /**
      * Animation and color properties
      */
     p.acts = {
@@ -86,7 +83,7 @@ const GeometryNo1 = (p) => {
     p.act1Scene = null;
     p.act2Scene = null;
 
-    /** 
+    /**
      * MIDI loading and processing
      * Handles synchronization between audio and visuals
      */
@@ -101,7 +98,7 @@ const GeometryNo1 = (p) => {
         });
     };
 
-    /** 
+    /**
      * Schedule MIDI cues to trigger animations
      * @param {Array} noteSet - Array of MIDI notes
      * @param {String} callbackName - Name of the callback function to execute
@@ -122,17 +119,17 @@ const GeometryNo1 = (p) => {
         }
     }
 
-    /** 
+    /**
      * Preload function - Loading audio and setting up MIDI
      * This runs first, before setup()
      */
     p.preload = () => {
-        /** 
+        /**
          * Log when preload starts
          */
         p.song = p.loadSound(audio, p.loadMidi);
         console.log(p.song);
-        
+
         p.song.onended(() => {
             p.songHasFinished = true;
             if (p.canvas) {
@@ -142,7 +139,7 @@ const GeometryNo1 = (p) => {
         });
     };
 
-    /** 
+    /**
      * Setup function - Initialize your canvas and any starting properties
      * This runs once after preload
      */
@@ -154,19 +151,19 @@ const GeometryNo1 = (p) => {
         p.colorMode(p.HSB);
         const fxHash = p.generateFxHash();
         p.randomSeed(fxHash);
-        
+
         // Initialize AnimatedCell instance
         p.animatedCell = new AnimatedCell(p);
-        
+
         // Initialize Act scene renderers
         p.act1Scene = new Act1Scene(p, p.animatedCell);
         p.act2Scene = new Act2Scene(p, p.animatedCell);
-        
+
         // Initialize random color values
         p.initializeRandomValues();
     };
 
-    /** 
+    /**
      * Draw Act 1 Scene - Contains the main drawing logic for Act 1
      */
     p.drawAct1Scene = () => {
@@ -174,16 +171,16 @@ const GeometryNo1 = (p) => {
         p.act1Scene.draw(scene);
     };
 
-    /** 
+    /**
      * Draw Act 2 Scene - Contains the main drawing logic for Act 2
      */
     p.drawAct2Scene = () => {
-        
+
         const scene = p.acts.act2[p.currentSceneIndex];
         p.act2Scene.draw(scene);
     };
 
-    /** 
+    /**
      * Main draw loop - This is where your animations happen
      * This runs continuously after setup
      */
@@ -192,12 +189,12 @@ const GeometryNo1 = (p) => {
 
         if (p.showingStatic) {
             p.background(0, 0, 0);
-            
+
         } else if(p.audioLoaded && p.song.isPlaying() || p.songHasFinished){
             // Update animation progress
             const elapsed = (p.song.currentTime() * 1000) - p.animationStartTime;
             p.animationProgress = p.min(elapsed / p.animationDuration, 1);
-            
+
             // Draw current act
             if (p.currentAct === 1) {
                 p.drawAct1Scene();
@@ -207,7 +204,7 @@ const GeometryNo1 = (p) => {
         }
     };
 
-    /** 
+    /**
      * Example track execution functions
      * Add your animation triggers here
      */
@@ -219,22 +216,24 @@ const GeometryNo1 = (p) => {
         if(currentCue !== 1) {
             p.currentSceneIndex++;
         }
-        
+
         const currentActScenes = p.acts[`act${p.currentAct}`];
-        
+
         // Check if next scene would exceed current act's length
         if (p.currentSceneIndex >= currentActScenes.length) {
             p.currentActIndex = (p.currentActIndex + 1) % p.actSequence.length;
             p.currentAct = p.actSequence[p.currentActIndex];
             p.currentSceneIndex = 0;
             console.log(`Switching to Act ${p.currentAct}`);
-        } 
-        
+        }
+
         p.animationStartTime = p.song.currentTime() * 1000;
         p.animationProgress = 0;
+
+        p.blendMode(p.random(p.blendModes));
     }
 
-    /** 
+    /**
      * Handle mouse/touch interaction
      * Controls play/pause and reset functionality
      */
@@ -248,7 +247,7 @@ const GeometryNo1 = (p) => {
                 }
             } else {
                 if (parseInt(p.song.currentTime()) >= parseInt(p.song.buffer.duration)) {
-                    /** 
+                    /**
                      * Reset animation properties here
                      */
                 }
@@ -306,7 +305,7 @@ const GeometryNo1 = (p) => {
         p.baseSplitComp2 = (p.baseHue + 210) % 360;
         p.compSplitComp1 = (p.complementaryHue + 150) % 360;
         p.compSplitComp2 = (p.complementaryHue + 210) % 360;
-        
+
         p.colourSet = [p.baseHue, p.baseSplitComp1, p.baseSplitComp2, p.complementaryHue, p.compSplitComp1, p.compSplitComp2];
 
         // Generate Act 1 scenes
@@ -326,19 +325,19 @@ const GeometryNo1 = (p) => {
                         bgColour: p.random([p.color(0, 0, 0), p.color(0, 0, 100)]),
                     },
                 }
-            ) 
+            )
         }
 
         p.acts.act1 = p.shuffle(p.acts.act1);
-        
+
         // Generate Act 2 scenes
         for(let i = 0; i < 16; i++){
             // Alternate between baseHue and complementaryHue
             const useBaseHue = i % 2 === 0;
-            const colorTriad = useBaseHue 
+            const colorTriad = useBaseHue
                 ? [p.baseHue, p.baseSplitComp1, p.baseSplitComp2]
                 : [p.complementaryHue, p.compSplitComp1, p.compSplitComp2];
-            
+
             // Create 6 cells with different bg/fg combinations
             const cells = [];
             const combinations = [
@@ -349,7 +348,7 @@ const GeometryNo1 = (p) => {
                 [2, 0], // splitComp2 bg, primaryHue fg
                 [0, 2], // primaryHue bg, splitComp2 fg
             ];
-            
+
             for(let j = 0; j < 6; j++){
                 const [bgIdx, fgIdx] = combinations[j];
                 cells.push({
@@ -359,10 +358,10 @@ const GeometryNo1 = (p) => {
                     shape: p.random(p.shapeTypes)
                 });
             }
-            
+
             p.acts.act2.push({ cells });
         }
-        
+
         console.log('Act 1:', p.acts.act1);
         console.log('Act 2:', p.acts.act2);
     };

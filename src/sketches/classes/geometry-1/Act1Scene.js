@@ -21,7 +21,7 @@ export default class Act1Scene {
     const cellWidth = this.p.width / 2;
     const cellHeight = this.p.height / 2;
     const cellAspectRatio = cellWidth / cellHeight;
-    
+
     if (cellAspectRatio > 1.5 && window.innerHeight < 500) {
       this.drawSingleRowLayout(scene);
     } else {
@@ -36,10 +36,10 @@ export default class Act1Scene {
   drawSingleRowLayout(scene) {
     const singleCellWidth = this.p.width / 4;
     const singleCellHeight = this.p.height;
-    
+
     // Cell 1: pattern1
     this.animatedCell.draw(
-      this.p.color(scene.complementaryHue, 20, 100),
+      this.p.color(scene.complementaryHue, 100, 100),
       this.p.color(scene.baseHue, 100, 100),
       0,
       0,
@@ -48,11 +48,11 @@ export default class Act1Scene {
       scene.pattern1.pattern,
       scene.pattern1.shape
     );
-    
+
     // Cell 2: pattern2 (delayed)
     this.animatedCell.draw(
-      this.p.color(scene.complementaryHue, 100, 20),
-      this.p.color(scene.baseHue, 100, 100),
+      scene.pattern2.bgColour,
+      this.p.color(scene.complementaryHue, 100, 100),
       singleCellWidth,
       0,
       singleCellWidth,
@@ -61,10 +61,10 @@ export default class Act1Scene {
       scene.pattern2.shape,
       0.4
     );
-    
+
     // Cell 3: pattern1
     this.animatedCell.draw(
-      this.p.color(scene.baseHue, 20, 100),
+      this.p.color(scene.baseHue, 100, 100),
       this.p.color(scene.complementaryHue, 100, 100),
       singleCellWidth * 2,
       0,
@@ -73,11 +73,11 @@ export default class Act1Scene {
       scene.pattern1.pattern,
       scene.pattern1.shape
     );
-    
+
     // Cell 4: pattern2 (delayed)
     this.animatedCell.draw(
-      this.p.color(scene.baseHue, 100, 20),
-      this.p.color(scene.complementaryHue, 100, 100),
+      scene.pattern2.bgColour,
+      this.p.color(scene.baseHue, 100, 100),
       singleCellWidth * 3,
       0,
       singleCellWidth,
@@ -95,7 +95,7 @@ export default class Act1Scene {
   drawGridLayout(scene) {
     const cellWidth = this.p.width / 2;
     const cellHeight = this.p.height / 2;
-    
+
     // Top-left: pattern1
     this.animatedCell.draw(
       this.p.color(scene.complementaryHue, 100, 100),
@@ -107,7 +107,7 @@ export default class Act1Scene {
       scene.pattern1.pattern,
       scene.pattern1.shape
     );
-    
+
     // Top-right: pattern2 (delayed)
     this.animatedCell.draw(
       scene.pattern2.bgColour,
@@ -120,7 +120,7 @@ export default class Act1Scene {
       scene.pattern2.shape,
       0.4
     );
-    
+
     // Bottom-left: pattern2 (delayed)
     this.animatedCell.draw(
       scene.pattern2.bgColour,
@@ -133,7 +133,7 @@ export default class Act1Scene {
       scene.pattern2.shape,
       0.4
     );
-    
+
     // Bottom-right: pattern1
     this.animatedCell.draw(
       this.p.color(scene.baseHue, 100, 100),
