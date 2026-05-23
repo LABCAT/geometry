@@ -49,7 +49,7 @@ export default class Act1Scene {
       scene.pattern1.shape
     );
 
-    // Cell 2: pattern2 (delayed)
+    // Cell 2: pattern2 (ease-in)
     this.animatedCell.draw(
       scene.pattern2.bgColour,
       this.p.color(scene.complementaryHue, 100, 100),
@@ -59,7 +59,7 @@ export default class Act1Scene {
       singleCellHeight,
       scene.pattern2.pattern,
       scene.pattern2.shape,
-      0.4
+      true
     );
 
     // Cell 3: pattern1
@@ -74,7 +74,7 @@ export default class Act1Scene {
       scene.pattern1.shape
     );
 
-    // Cell 4: pattern2 (delayed)
+    // Cell 4: pattern2 (ease-in)
     this.animatedCell.draw(
       scene.pattern2.bgColour,
       this.p.color(scene.baseHue, 100, 100),
@@ -84,7 +84,7 @@ export default class Act1Scene {
       singleCellHeight,
       scene.pattern2.pattern,
       scene.pattern2.shape,
-      0.4
+      true
     );
   }
 
@@ -108,7 +108,7 @@ export default class Act1Scene {
       scene.pattern1.shape
     );
 
-    // Top-right: pattern2 (delayed)
+    // Top-right: pattern2 (ease-in)
     this.animatedCell.draw(
       scene.pattern2.bgColour,
       this.p.color(scene.complementaryHue, 100, 100),
@@ -118,10 +118,10 @@ export default class Act1Scene {
       cellHeight,
       scene.pattern2.pattern,
       scene.pattern2.shape,
-      0.4
+      true
     );
 
-    // Bottom-left: pattern2 (delayed)
+    // Bottom-left: pattern2 (ease-in)
     this.animatedCell.draw(
       scene.pattern2.bgColour,
       this.p.color(scene.baseHue, 100, 100),
@@ -131,7 +131,7 @@ export default class Act1Scene {
       cellHeight,
       scene.pattern2.pattern,
       scene.pattern2.shape,
-      0.4
+      true
     );
 
     // Bottom-right: pattern1

@@ -1,10 +1,10 @@
 /**
- * Act2Scene - Handles rendering for Act 2 scenes
- * Draws 6 cells (3x2 landscape or 2x3 portrait) with split complementary colors
+ * Act3Scene - Handles rendering for Act 3 scenes
+ * Draws 2x2 or 1x4 grid of cells with layered sacred geometry patterns
  */
 export default class Act2Scene {
   /**
-   * Create an Act2Scene renderer
+   * Create an Act3Scene renderer
    * @param {p5} p - The p5 instance
    * @param {AnimatedCell} animatedCell - The AnimatedCell instance for drawing
    */
@@ -14,72 +14,196 @@ export default class Act2Scene {
   }
 
   /**
-   * Draw the current Act 2 scene with 6 cells
-   * @param {Object} scene - The scene data containing split complementary colors
+   * Draw the current Act 3 scene
+   * @param {Object} scene - The scene data containing hues and patterns
    */
   draw(scene) {
-    if (this.p.isPortraitCanvas()) {
-      this.drawPortraitLayout(scene);
+    const cellWidth = this.p.width / 2;
+    const cellHeight = this.p.height / 2;
+    const cellAspectRatio = cellWidth / cellHeight;
+
+    if (cellAspectRatio > 1.5 && window.innerHeight < 500) {
+      this.drawSingleRowLayout(scene);
     } else {
-      this.drawLandscapeLayout(scene);
+      this.drawGridLayout(scene);
     }
   }
 
   /**
-   * Draw landscape layout (3 columns x 2 rows)
+   * Draw single row layout (1x4 grid) for wide aspect ratios
    * @param {Object} scene - The scene data
    */
-  drawLandscapeLayout(scene) {
-    const cellWidth = this.p.width / 3;
+  drawSingleRowLayout(scene) {
+    const singleCellWidth = this.p.width / 4;
+    const singleCellHeight = this.p.height;
+
+    this.drawCell(
+      this.p.color(scene.complementaryHue, 20, 100),
+      scene.complementaryHue,
+      0,
+      0,
+      singleCellWidth,
+      singleCellHeight,
+      true,
+      0,
+      scene
+    );
+
+    // Top-right: ease-in
+    this.drawCell(
+      this.p.color(scene.complementaryHue, 100, 20),
+      scene.complementaryHue,
+      singleCellWidth,
+      0,
+      singleCellWidth,
+      singleCellHeight,
+      false,
+      1,
+      scene,
+      true
+    );
+
+    this.drawCell(
+      this.p.color(scene.baseHue, 20, 100),
+      scene.baseHue,
+      singleCellWidth * 2,
+      0,
+      singleCellWidth,
+      singleCellHeight,
+      true,
+      2,
+      scene,
+      true
+    );
+
+    // Bottom-right
+    this.drawCell(
+      this.p.color(scene.baseHue, 100, 20),
+      scene.baseHue,
+      singleCellWidth * 3,
+      0,
+      singleCellWidth,
+      singleCellHeight,
+      false,
+      3,
+      scene
+    );
+  }
+
+  /**
+   * Draw 2x2 grid layout
+   * @param {Object} scene - The scene data
+   */
+  drawGridLayout(scene) {
+    const cellWidth = this.p.width / 2;
     const cellHeight = this.p.height / 2;
 
-    // Draw 6 cells in 3x2 grid
-    for (let i = 0; i < 6; i++) {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
-      const cell = scene.cells[i];
+    // Top-left: ease-in
+    this.drawCell(
+      this.p.color(scene.complementaryHue, 100, 20),
+      scene.complementaryHue,
+      0,
+      0,
+      cellWidth,
+      cellHeight,
+      true,
+      0,
+      scene,
+      true
+    );
 
-      this.animatedCell.draw(
-        this.p.color(cell.bgHue, 100, 100),
-        this.p.color(cell.fgHue, 100, 100),
-        col * cellWidth,
-        row * cellHeight,
-        cellWidth,
-        cellHeight,
-        cell.pattern,
-        cell.shape
-      );
-    }
+    // Top-right
+    this.drawCell(
+      this.p.color(scene.baseHue, 20, 100),
+      scene.baseHue,
+      cellWidth,
+      0,
+      cellWidth,
+      cellHeight,
+      false,
+      1,
+      scene
+    );
+
+    // Bottom-left: ease-in
+    this.drawCell(
+      this.p.color(scene.complementaryHue, 20, 100),
+      scene.complementaryHue,
+      0,
+      cellHeight,
+      cellWidth,
+      cellHeight,
+      false,
+      2,
+      scene
+    );
+
+    // Bottom-right
+    this.drawCell(
+      this.p.color(scene.baseHue, 100, 20),
+      scene.baseHue,
+      cellWidth,
+      cellHeight,
+      cellWidth,
+      cellHeight,
+      true,
+      3,
+      scene,
+      true
+    );
   }
 
   /**
-   * Draw portrait layout (2 columns x 3 rows)
-   * @param {Object} scene - The scene data
+   * Draws a single cell with background color and layered sacred geometry pattern
+   * @param {p5.Color} bgColor - Background color object
+   * @param {number} strokeHue - Stroke hue value
+   * @param {number} x - X position of the cell
+   * @param {number} y - Y position of the cell
+   * @param {number} w - Width of the cell
+   * @param {number} h - Height of the cell
+   * @param {boolean} isTintedBG - Whether background is tinted (true) or shaded (false)
+   * @param {number} patternIndex - Index of pattern from scene.patterns
+   * @param {Object} scene - The scene data containing patterns and shapes
+   * @param {boolean} easeIn - Faster ease-in (t^1.5); default is ease-out
    */
-  drawPortraitLayout(scene) {
-    const cellWidth = this.p.width / 2;
-    const cellHeight = this.p.height / 3;
+  drawCell(bgColor, strokeHue, x, y, w, h, isTintedBG, patternIndex, scene, easeIn = false) {
+    const maxSize = this.p.min(w, h) * 0.35;
+    const t = this.p.min(1, (this.p.animationProgress ?? 1) / 0.8);
+    const progress = easeIn ? Math.pow(t, 1.5) : 1 - Math.pow(1 - t, 3);
+    const size = maxSize * progress;
 
-    // Draw 6 cells in 2x3 grid
-    // Remap indices so first column matches landscape's top row
-    for (let i = 0; i < 6; i++) {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
-      // Map: col 0 gets cells 0,1,2 (landscape top row), col 1 gets cells 3,4,5 (landscape bottom row)
-      const cellIndex = col * 3 + row;
-      const cell = scene.cells[cellIndex];
+    this.p.push();
+    this.p.translate(x, y);
 
-      this.animatedCell.draw(
-        this.p.color(cell.bgHue, 100, 100),
-        this.p.color(cell.fgHue, 100, 100),
-        col * cellWidth,
-        row * cellHeight,
-        cellWidth,
-        cellHeight,
-        cell.pattern,
-        cell.shape
-      );
+    this.p.fill(bgColor);
+    this.p.noStroke();
+    this.p.rect(0, 0, w, h);
+
+    this.p.noFill();
+    this.p.setCenter(w / 2, h / 2);
+
+    const pattern = scene.patterns[patternIndex];
+    const shape = scene.shapes[patternIndex];
+
+    if (isTintedBG) {
+      this.p.stroke(strokeHue, 100, 100);
+      this.p.fill(strokeHue, 40, 100);
+      this.p[pattern](shape, size);
+
+      this.p.stroke(strokeHue, 80, 100);
+      this.p.fill(strokeHue, 100, 40);
+      this.p[pattern](shape, size / 2);
+    } else {
+      this.p.stroke(strokeHue, 100, 100);
+      this.p.fill(strokeHue, 100, 40);
+      this.p[pattern](shape, size);
+
+      this.p.stroke(strokeHue, 100, 80);
+      this.p.fill(strokeHue, 40, 100);
+      this.p[pattern](shape, size / 2);
     }
+
+    this.p.pop();
   }
 }
 

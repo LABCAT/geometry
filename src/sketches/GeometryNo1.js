@@ -59,7 +59,7 @@ const GeometryNo1 = (p) => {
     p.blendModes = [
         p.BLEND,
         p.EXCLUSION,
-        p.SCREEN,
+        // p.SCREEN,
         p.DIFFERENCE,
         p.HARD_LIGHT
     ];
@@ -347,6 +347,25 @@ const GeometryNo1 = (p) => {
 
         // Generate Act 2 scenes
         for(let i = 0; i < 16; i++){
+            const selectedBaseHue = p.random(p.colourSet);
+            const complementaryHue = (selectedBaseHue + 180) % 360;
+
+            // Generate unique pattern and shape sets for this scene
+            const shuffledPatterns = [...p.patternFunctions].sort(() => Math.random() - 0.5);
+            const shuffledShapes = [...p.shapeTypes].sort(() => Math.random() - 0.5);
+
+            p.acts.act2.push({
+                baseHue: selectedBaseHue,
+                complementaryHue: complementaryHue,
+                patterns: shuffledPatterns.slice(0, 4),
+                shapes: shuffledShapes.slice(0, 4)
+            });
+        }
+
+        p.acts.act2 = p.shuffle(p.acts.act2);
+
+        // Generate Act 3 scenes
+        for(let i = 0; i < 16; i++){
             // Alternate between baseHue and complementaryHue
             const useBaseHue = i % 2 === 0;
             const colorTriad = useBaseHue
@@ -374,27 +393,8 @@ const GeometryNo1 = (p) => {
                 });
             }
 
-            p.acts.act2.push({ cells });
+            p.acts.act3.push({ cells });
         }
-
-        // Generate Act 3 scenes
-        for(let i = 0; i < 16; i++){
-            const selectedBaseHue = p.random(p.colourSet);
-            const complementaryHue = (selectedBaseHue + 180) % 360;
-
-            // Generate unique pattern and shape sets for this scene
-            const shuffledPatterns = [...p.patternFunctions].sort(() => Math.random() - 0.5);
-            const shuffledShapes = [...p.shapeTypes].sort(() => Math.random() - 0.5);
-
-            p.acts.act3.push({
-                baseHue: selectedBaseHue,
-                complementaryHue: complementaryHue,
-                patterns: shuffledPatterns.slice(0, 4),
-                shapes: shuffledShapes.slice(0, 4)
-            });
-        }
-
-        p.acts.act3 = p.shuffle(p.acts.act3);
 
         console.log('Act 1:', p.acts.act1);
         console.log('Act 2:', p.acts.act2);
