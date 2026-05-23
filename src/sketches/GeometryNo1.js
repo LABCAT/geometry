@@ -10,7 +10,7 @@ import Act2Scene from './classes/geometry-1/Act2Scene.js';
 import Act3Scene from './classes/geometry-1/Act3Scene.js';
 
 const base = import.meta.env.BASE_URL || './';
-const audio = `${base}audio/GeometryNo1.ogg`;
+const audio = `${base}audio/GeometryNo1.mp3`;
 const midi = `${base}audio/GeometryNo1.mid`;
 
 const GeometryNo1 = (p) => {
