@@ -3,6 +3,7 @@ import "p5/lib/addons/p5.sound";
 import { Midi } from '@tonejs/midi';
 import '@/lib/p5.polar.js';
 import '@/lib/p5.sacredGeometry.js';
+import initCapture from '@/lib/p5.capture.js';
 
 import AnimatedCell from './classes/geometry-1/AnimatedCell.js';
 import Act1Scene from './classes/geometry-1/Act1Scene.js';
@@ -129,8 +130,11 @@ const GeometryNo1 = (p) => {
         /**
          * Log when preload starts
          */
-        p.song = p.loadSound(audio, p.loadMidi);
-        console.log(p.song);
+        p.song = p.loadSound(audio, (sound) => {
+            p.audioSampleRate = sound.sampleRate();
+            p.totalAnimationFrames = Math.floor(sound.duration() * 60);
+            p.loadMidi();
+        });
 
         p.song.onended(() => {
             p.songHasFinished = true;
@@ -166,6 +170,8 @@ const GeometryNo1 = (p) => {
 
         // Initialize random color values
         p.initializeRandomValues();
+
+        initCapture(p, { prefix: 'GeometryNo1', enabled: false});
     };
 
     /**
@@ -203,7 +209,7 @@ const GeometryNo1 = (p) => {
         if (p.showingStatic) {
             p.background(0, 0, 0);
 
-        } else if(p.audioLoaded && p.song.isPlaying() || p.songHasFinished){
+        } else if (p.audioLoaded && (p.song.isPlaying() || p.songHasFinished || p.captureInProgress)) {
             // Update animation progress
             const elapsed = (p.song.currentTime() * 1000) - p.animationStartTime;
             p.animationProgress = p.min(elapsed / p.animationDuration, 1);
@@ -254,6 +260,11 @@ const GeometryNo1 = (p) => {
      */
     p.mousePressed = () => {
         if(p.audioLoaded){
+            if (p.captureEnabled) {
+                p.showingStatic = false;
+                p.startCapture();
+                return;
+            }
             if (p.song.isPlaying()) {
                 p.song.pause();
                 if (p.canvas) {
